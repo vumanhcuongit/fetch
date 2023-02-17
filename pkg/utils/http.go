@@ -7,8 +7,33 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"sync"
+	"time"
 )
+
+// create a shared HTTP client for connection reuse
+var httpClient *http.Client
+var once sync.Once
+
+func GetHTTPClient() *http.Client {
+	once.Do(func() {
+		transport := &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			MaxIdleConns:    100,
+			IdleConnTimeout: 90 * time.Second,
+		}
+		httpClient = &http.Client{
+			Timeout:   time.Second * 30,
+			Transport: transport,
+		}
+	})
+	return httpClient
+}
 
 func HttpGet(url string) (io.ReadCloser, error) {
 	req, err := http.NewRequest("GET", url, nil)
@@ -16,7 +41,7 @@ func HttpGet(url string) (io.ReadCloser, error) {
 		return nil, err
 	}
 	req.Header.Set("Accept-Encoding", "gzip, deflate")
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := GetHTTPClient().Do(req)
 	if err != nil {
 		return nil, err
 	}
