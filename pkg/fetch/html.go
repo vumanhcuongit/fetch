@@ -1,10 +1,10 @@
 package fetch
 
 import (
+	"fetch-go/pkg/utils"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	netURL "net/url"
 	"os"
 	"path"
@@ -44,16 +44,16 @@ func ParseHTML(baseURL string, body io.ReadCloser) error {
 		}
 		// relative URL
 		if u.Host == "" {
-			url = baseURL + url
+			url = baseURL + "/" + url
 		}
 
 		// download the asset
 		localPath, err := downloadAsset(url)
 		if err != nil {
+			fmt.Println(url)
 			fmt.Println("Error downloading asset:", err)
 			return
 		}
-
 		// replace the URL in the HTML with the local path
 		s.SetAttr("src", localPath)
 		s.SetAttr("href", localPath)
@@ -103,14 +103,13 @@ func downloadAsset(urlStr string) (string, error) {
 	}
 
 	// download the asset
-	resp, err := http.Get(urlStr)
+	reader, err := utils.HttpGet(urlStr)
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
 
 	// save the asset to disk
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return "", err
 	}
