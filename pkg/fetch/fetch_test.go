@@ -67,7 +67,8 @@ func TestScrapeURLsWithMetadata(t *testing.T) {
 site: %s
 num_links: %d
 images: %d
-last_fetch: %s`, "example.com", 1, 0, time.Now().Format("Mon, 02 Jan 2006 15:04:05 MST"))
+last_fetch: %s
+`, "example.com", 1, 0, time.Now().Format("Mon, 02 Jan 2006 15:04:05 MST"))
 	if string(out) != expected {
 		t.Errorf("unexpected output: got %q, want %q", string(out), expected)
 	}

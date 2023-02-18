@@ -44,7 +44,8 @@ func (f *Fetcher) ScrapeURLs(urls []string, options FetchOptions) error {
 site: %s
 num_links: %d
 images: %d
-last_fetch: %s`, metadata.Site, metadata.NumLinks, metadata.NumImages, metadata.LastFetch.Format("Mon, 02 Jan 2006 15:04:05 MST"))
+last_fetch: %s
+`, metadata.Site, metadata.NumLinks, metadata.NumImages, metadata.LastFetch.Format("Mon, 02 Jan 2006 15:04:05 MST"))
 			}
 		}(url)
 	}

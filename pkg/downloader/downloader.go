@@ -77,7 +77,7 @@ func (d *AssetDownloader) DownloadAsset(url string) (*Asset, error) {
 	// download the asset
 	reader, err := utils.HttpGet(url)
 	if err != nil {
-		d.logger.Errorf("failed to get content from URL, err: %+v", err)
+		d.logger.Errorf("failed to get content from URL %s, err: %+v", url, err)
 		return nil, err
 	}
 
