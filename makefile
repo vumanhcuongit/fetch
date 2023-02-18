@@ -11,3 +11,6 @@ fetch:
         fetch \
         $(URLS) \
         $(if $(filter true,$(METADATA)),--metadata)
+
+build:
+	@docker build -t $(IMAGE_NAME) . ;
