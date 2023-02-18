@@ -1,36 +1,87 @@
 package fetch
 
 import (
+	"errors"
 	"fetch-go/pkg/downloader"
 	"fetch-go/pkg/utils"
-	"fmt"
 	"io"
+	"net/url"
 	netURL "net/url"
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
-const (
-	maxConcurrent = 100
-)
+type Metadata struct {
+	Site      string
+	NumLinks  int
+	NumImages int
+	LastFetch time.Time
+}
 
-func ParseHTML(baseURL string, body io.ReadCloser) error {
+type ParseHTMLContentInput struct {
+	URL                 string
+	Body                io.ReadCloser
+	ShouldFetchMetadata bool
+	MaxConcurrent       int
+}
+
+func (f *Fetcher) ParseHTMLContent(
+	input ParseHTMLContentInput,
+) (*Metadata, error) {
 	assetDownloader := downloader.NewAssetDownloader(
+		f.logger,
 		utils.GetHTTPClient(),
-		maxConcurrent,
+		input.MaxConcurrent,
 	)
 
 	// parse the HTML document
-	doc, err := goquery.NewDocumentFromReader(body)
+	if input.Body == nil {
+		return nil, errors.New("invalid body")
+	}
+	doc, err := goquery.NewDocumentFromReader(input.Body)
 	if err != nil {
-		fmt.Println("error parsing document:", err)
-		return err
+		f.logger.Errorf("error parsing document: %+v", err)
+		return nil, err
 	}
 
-	// download and replace the URLs of the assets
+	assetURLs := f.getAssetURLs(input.URL, doc)
+
+	// download the assets
+	localPaths := assetDownloader.DownloadAssets(assetURLs)
+
+	// replace the URLs in the HTML with the local paths
+	f.updateHTMLWithLocalPaths(doc, localPaths)
+
+	// save the modified HTML to a file
+	filename := path.Base(input.URL) + ".html"
+	if err := f.saveHTMLToFile(doc, filename); err != nil {
+		f.logger.Errorf("Error writing file: %+v", err)
+		return nil, err
+	}
+
+	if input.ShouldFetchMetadata {
+		parsedURL, err := url.Parse(input.URL)
+		if err != nil {
+			return nil, err
+		}
+
+		metadata := &Metadata{
+			Site:      parsedURL.Hostname(),
+			NumLinks:  doc.Find("a").Length(),
+			NumImages: doc.Find("img").Length(),
+			LastFetch: time.Now(),
+		}
+		return metadata, nil
+	}
+
+	return nil, nil
+}
+
+func (f *Fetcher) getAssetURLs(baseURL string, doc *goquery.Document) []string {
 	assetURLs := []string{}
 	doc.Find("[src], [href]").Each(func(i int, s *goquery.Selection) {
 		url, ok := s.Attr("src")
@@ -49,9 +100,10 @@ func ParseHTML(baseURL string, body io.ReadCloser) error {
 		// check if it's relative URL
 		u, err := netURL.Parse(url)
 		if err != nil {
-			fmt.Println("Error while parsing the image URL:", err)
+			f.logger.Errorf("error while parsing the image URL: %+v", err)
 			return
 		}
+
 		// relative URL
 		if u.Host == "" {
 			url = baseURL + "/" + url
@@ -60,10 +112,10 @@ func ParseHTML(baseURL string, body io.ReadCloser) error {
 		assetURLs = append(assetURLs, url)
 	})
 
-	// download the assets
-	localPaths := assetDownloader.DownloadAssets(assetURLs)
-	// fmt.Println(localPaths)
-	// replace the URLs in the HTML with the local paths
+	return assetURLs
+}
+
+func (f *Fetcher) updateHTMLWithLocalPaths(doc *goquery.Document, localPaths []string) {
 	doc.Find("[src], [href]").Each(func(i int, s *goquery.Selection) {
 		url, ok := s.Attr("src")
 		if !ok {
@@ -82,26 +134,24 @@ func ParseHTML(baseURL string, body io.ReadCloser) error {
 		}
 
 		if localPath != "" {
-			// replace the URL in the HTML with the local path
 			s.SetAttr("src", localPath)
 			s.SetAttr("href", localPath)
 		}
 	})
+}
 
-	// save the modified HTML to a file
+func (f *Fetcher) saveHTMLToFile(doc *goquery.Document, filename string) error {
 	html, err := doc.Html()
 	if err != nil {
-		fmt.Println("Error generating HTML:", err)
+		f.logger.Errorf("Error generating HTML: %+v", err)
 		return err
 	}
 
-	filename := path.Base(baseURL) + ".html"
 	err = os.WriteFile(filename, []byte(html), 0644)
 	if err != nil {
-		fmt.Println("Error writing file:", err)
+		f.logger.Errorf("Error writing file: %+v", err)
 		return err
 	}
 
-	fmt.Println("Done!")
 	return nil
 }
