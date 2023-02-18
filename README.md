@@ -40,7 +40,7 @@ make fetch URLS=<URL> METADATA=true
 Example usage:
 
 ```bash
-make fetch URLS="https://www.google.com https://mholt.github.io/json-to-go" METADATA=true
+make fetch URLS="https://mholt.github.io/json-to-go" METADATA=true
 ```
 
 ## CLI Framework
