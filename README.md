@@ -1,3 +1,8 @@
+## Archiving Assets
+When running the CLI with the makefile command, all assets (such as CSS, JS, and image files) are automatically downloaded and archived locally. This means that the web page can be loaded locally with all assets loading properly, providing a convenient way to view the web page offline or on a local network.
+
+To access the archived assets, navigate to the `assets` folder that is created in the root directory after running the makefile command. Inside this folder, you will find a subfolder for each URL that was fetched, containing all of the downloaded assets for that URL.
+
 ## Concurrency and Performance
 To improve the performance of URL fetching, concurrency features of Go such as Goroutines and channels are utilized. Instead of downloading URLs sequentially, which can cause blocking and longer wait times, they are downloaded concurrently. This allows multiple downloads to occur simultaneously, leading to better performance.
 
@@ -12,7 +17,7 @@ The HttpGet(url string) function makes an HTTP GET request to the given URL and 
 
 By handling gzip-encoded content, the amount of data that needs to be transferred over the network is reduced, leading to faster response times and better user experience.
 
-## Running the CLI with Makefile
+## Running the CLI with makefile
 1. To fetch a single URL, run the following command:
 
 ```bash
@@ -24,7 +29,7 @@ make fetch URLS=<URL>
 ```bash
 make fetch URLS="<URL1> <URL2> <URL3>"
 ```
-Replace `<URL1>`, `<URL2>`, and `<URL3>` with the URLs that you want to fetch, **separated by a space**.
+Replace `<URL1>`, `<URL2>`, and `<URL3>` with the URLs that you want to fetch, **separated by a whitespace**.
 
 3. If you want to include metadata in the output, add the `METADATA=true` argument:
 
