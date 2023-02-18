@@ -1,10 +1,10 @@
 ## Concurrency and Performance
 
-To improve the performance of our URL fetching and asset downloading, we use Go's concurrency features, such as Goroutines and channels. Instead of downloading URLs sequentially, which can result in blocking and longer wait times, we download them concurrently. This means that multiple downloads can occur at the same time, leading to better performance.
+To improve the performance of URL fetching, concurrency features of Go such as Goroutines and channels are utilized. Instead of downloading URLs sequentially, which can cause blocking and longer wait times, they are downloaded concurrently. This allows multiple downloads to occur simultaneously, leading to better performance.
 
-Similarly, we download assets such as CSS, JS, and image files concurrently rather than sequentially to further improve performance. For each file we want to download, we create a new Goroutine to perform the download. We use a WaitGroup to ensure that all Goroutines complete their tasks before the program exits, and we also limit the number of Goroutines to a reasonable number to avoid overloading the system.
+Similarly, assets such as CSS, JS, and image files are downloaded concurrently instead of sequentially to further improve performance. For each file to download, a new Goroutine is created to perform the download. A WaitGroup is utilized to ensure that all Goroutines complete their tasks before the program exits, and the number of Goroutines is limited to a reasonable number to avoid overloading the system.
 
-By controlling the maximum number of Goroutines, we can ensure that the program performs well even when downloading a large number of files. This approach leads to faster response times and a better user experience.
+By controlling the maximum number of Goroutines, optimal program performance is maintained even when downloading a large number of files. This approach results in faster response times and an improved user experience.
 
 ## Gzip Handling
 
@@ -27,7 +27,7 @@ make fetch URLS=<URL>
 ```bash
 make fetch URLS="<URL1> <URL2> <URL3>"
 ```
-Replace <URL1>, <URL2>, and <URL3> with the URLs that you want to fetch, **separated by a space**.
+Replace `<URL1>`, `<URL2>`, and `<URL3>` with the URLs that you want to fetch, **separated by a space**.
 
 3. If you want to include metadata in the output, add the `METADATA=true` argument:
 
