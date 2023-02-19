@@ -8,14 +8,14 @@ To improve the performance of URL fetching, concurrency features of Go such as G
 
 Similarly, assets such as CSS, JS, and image files are downloaded concurrently instead of sequentially to further improve performance. For each file to download, a new Goroutine is created to perform the download. A WaitGroup is utilized to ensure that all Goroutines complete their tasks before the program exits, and the number of Goroutines is limited to a reasonable number to avoid overloading the system.
 
-By controlling the maximum number of Goroutines, optimal program performance is maintained even when downloading a large number of files. This approach results in faster response times and an improved user experience.
+By controlling the maximum number of Goroutines, the application also controls the maximum number of goroutines to avoid overloading the system.
 
 ## Gzip Handling
 To improve network performance and reduce the amount of data that needs to be transferred over the network, the application uses gzip compression for HTTP responses. To handle gzip-encoded content, we use the `gzip` package provided by Go standard library.
 
 The `HttpGet(url string)` function makes an HTTP GET request to the given URL and sets the `Accept-Encoding` header to `gzip, deflate` to indicate that the application can handle compressed content.
 
-By handling gzip-encoded content, the amount of data that needs to be transferred over the network is reduced, leading to faster response times and better user experience.
+By handling gzip-encoded content, the amount of data that needs to be transferred over the network is reduced, leading to faster response times.
 
 ## Reusing HTTP Connections
 One of the key ways to improve the performance of the application that downloads a large number of assets, such as CSS, JS, and image files, is to reuse http connections. This way, we can avoid the overhead of establishing a new TCP connection for each file to download.
