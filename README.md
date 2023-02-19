@@ -17,6 +17,48 @@ The HttpGet(url string) function makes an HTTP GET request to the given URL and 
 
 By handling gzip-encoded content, the amount of data that needs to be transferred over the network is reduced, leading to faster response times and better user experience.
 
+## Reusing HTTP Connections
+One of the key ways to improve the performance of the application that downloads a large number of assets, such as CSS, JS, and image files, is to reuse http connections. This way, we can avoid the overhead of establishing a new TCP connection for each file to download.
+
+To reuse connections in Go, we can create an `http.Client` with a custom `Transport` that has a connection pool. This way, we can reuse connections for multiple requests to the same host.
+
+Let's take a look at an example of how this can be implemented in the app:
+
+In the `GetHTTPClient` function, a singleton instance of the `http.Client` is created with a `Transport` that has a pool of connections. The `http.Client` is returned whenever `GetHTTPClient` is called.
+
+```go
+package utils
+
+import (
+	"net"
+	"net/http"
+	"sync"
+	"time"
+)
+
+// create a shared HTTP client for connection reuse
+var httpClient *http.Client
+var once sync.Once
+
+func GetHTTPClient() *http.Client {
+	once.Do(func() {
+		transport := &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			MaxIdleConns:    100,
+			IdleConnTimeout: 90 * time.Second,
+		}
+		httpClient = &http.Client{
+			Timeout:   time.Second * 30,
+			Transport: transport,
+		}
+	})
+	return httpClient
+}
+```
+
 ## Running the CLI with makefile
 1. To fetch a single URL, run the following command:
 
